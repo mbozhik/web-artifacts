@@ -3,16 +3,35 @@
 body {
   font-family: 'JetBrains Mono', monospace;
   font-optical-sizing: auto;
-  width: 300px;
+  width: 500px;
   padding-block: 5px;
   padding-inline: 20px;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+section {
+  margin-bottom: 10px;
+}
+
+div.colors-block {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+article {
+  padding-inline: 10px;
+  line-height: 1;
+  margin: 5px;
+  border-radius: 4px;
+  outline: 2px solid #ddd;
 }
 
 h1 {
   font-size: 24px;
   line-height: 1;
-}
-
-div {
-  margin-bottom: 10px;
 }
