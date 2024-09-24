@@ -2,15 +2,25 @@
   "manifest_version": 3,
   "name": "web-artifacts",
   "description": "scrape artifacts from any website",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "author": "Maxim Bozhik",
   "icons": {
     "16": "images/icon-16.png",
     "48": "images/icon-48.png",
     "128": "images/icon-128.png"
   },
+
+  "permissions": ["activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
-    "default_popup": "/index.html",
-    "default_title": "web-artifacts"
-  }
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
 }
