@@ -19,10 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 function collectWebArtifacts() {
-  const fonts = Array.from(new Set([...document.querySelectorAll('*')].map((el) => getComputedStyle(el).fontFamily)))
-  const colors = Array.from(new Set([...document.querySelectorAll('*')].map((el) => getComputedStyle(el).color)))
+  const fontFamilies = Array.from(new Set([...document.querySelectorAll('*')].map((el) => getComputedStyle(el).fontFamily)))
 
-  return {fonts, colors}
+  const textColors = Array.from(new Set([...document.querySelectorAll('*')].map((el) => getComputedStyle(el).color)))
+  const backgroundColors = Array.from(new Set([...document.querySelectorAll('*')].map((el) => getComputedStyle(el).backgroundColor)))
+  const combinedColors = [...textColors, ...backgroundColors]
+
+  return {fonts: fontFamilies, colors: combinedColors}
 }
 
 function parseFonts(fonts) {
