@@ -21,11 +21,6 @@ section {
   margin-bottom: 10px;
 }
 
-div.colors-block {
-  display: flex;
-  flex-wrap: wrap;
-}
-
 article {
   padding-inline: 10px;
   line-height: 1;
@@ -37,4 +32,22 @@ article {
 h1 {
   font-size: 24px;
   line-height: 1;
+}
+
+div.colors-block {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+div.images-block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+div.images-block img {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  border: 2px solid #ddd;
 }

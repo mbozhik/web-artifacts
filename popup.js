@@ -6,13 +6,16 @@ document.addEventListener('DOMContentLoaded', () => {
         function: collectWebArtifacts,
       },
       (results) => {
-        const {fonts, colors} = results[0].result
+        const {fonts, colors, images} = results[0].result
 
         const fontList = parseFonts(fonts)
         document.getElementById('fonts').querySelector('div').innerHTML = fontList.join(', ')
 
         const colorArticles = parseColors(colors)
         document.getElementById('colors').querySelector('div').innerHTML = colorArticles.join('')
+
+        const imageElements = parseImages(images)
+        document.getElementById('images').querySelector('div').innerHTML = imageElements.join('')
       },
     )
   })
@@ -25,7 +28,19 @@ function collectWebArtifacts() {
   const backgroundColors = Array.from(new Set([...document.querySelectorAll('*')].map((el) => getComputedStyle(el).backgroundColor)))
   const combinedColors = [...textColors, ...backgroundColors]
 
-  return {fonts: fontFamilies, colors: combinedColors}
+  // Collecting all image src attributes
+  const imageSources = Array.from(document.querySelectorAll('img')).map((img) => img.src)
+
+  return {fonts: fontFamilies, colors: combinedColors, images: imageSources}
+}
+
+function parseImages(images) {
+  return images.map((src) => {
+    return `
+      <a href="${src}" target="_blank" rel="noopener noreferrer">
+        <img src="${src}" style="max-width: 100%; margin-bottom: 10px;" />
+      </a>`
+  })
 }
 
 function parseFonts(fonts) {
@@ -35,16 +50,16 @@ function parseFonts(fonts) {
 }
 
 function parseColors(colors) {
+  function isLightColor(color) {
+    const rgb = color.match(/\d+/g).map(Number)
+
+    const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255
+    return luminance > 0.5
+  }
+
   return colors.map((color) => {
     return `<article style="background-color: ${color}; color: ${isLightColor(color) ? '#000' : '#fff'};">
               <p>${color}</p>
             </article>`
   })
-}
-
-function isLightColor(color) {
-  const rgb = color.match(/\d+/g).map(Number)
-
-  const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255
-  return luminance > 0.5
 }
