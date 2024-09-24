@@ -51,3 +51,19 @@ div.images-block img {
   object-fit: contain;
   border: 2px solid #ddd;
 }
+
+.animation-item {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.animation-item h4 {
+  margin: 0 0 5px 0;
+}
+
+.animation-item p {
+  margin: 2px 0;
+}
