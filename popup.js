@@ -1,4 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const inspectButton = document.getElementById('inspectButton')
+  let isInspecting = false
+
+  inspectButton.addEventListener('click', () => {
+    isInspecting = !isInspecting
+
+    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+      if (isInspecting) {
+        chrome.scripting.executeScript({
+          target: {tabId: tabs[0].id},
+          function: startInspecting,
+        })
+        inspectButton.textContent = 'Deactivate Element Inspector'
+      } else {
+        chrome.scripting.executeScript({
+          target: {tabId: tabs[0].id},
+          function: stopInspecting,
+        })
+        inspectButton.textContent = 'Activate Element Inspector'
+      }
+    })
+  })
+
   chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
     chrome.scripting.executeScript(
       {
@@ -27,6 +50,106 @@ document.addEventListener('DOMContentLoaded', () => {
     )
   })
 })
+
+function startInspecting() {
+  const style = document.createElement('style')
+  style.innerHTML = `
+    .highlight {
+      outline: 2px solid red !important;
+      position: relative;
+    }
+    .tooltip {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.75);
+      color: white;
+      font-size: 12px;
+      padding: 5px;
+      border-radius: 4px;
+      white-space: nowrap;
+      z-index: 9999;
+    }
+  `
+  document.head.appendChild(style)
+
+  let previousElement = null
+  let tooltip = null
+
+  function clearPreviousHighlight() {
+    if (previousElement) {
+      previousElement.classList.remove('highlight')
+      if (tooltip) {
+        tooltip.remove()
+        tooltip = null
+      }
+    }
+  }
+
+  function showElementStyles(element) {
+    clearPreviousHighlight()
+
+    previousElement = element
+    previousElement.classList.add('highlight')
+
+    const styles = window.getComputedStyle(element)
+    const font = styles.fontFamily
+    const color = styles.color
+    const bgColor = styles.backgroundColor
+
+    tooltip = document.createElement('div')
+    tooltip.className = 'tooltip'
+    tooltip.innerHTML = `
+      <p><strong>Font:</strong> ${font}</p>
+      <p><strong>Color:</strong> ${color}</p>
+      <p><strong>Background:</strong> ${bgColor}</p>
+    `
+
+    const rect = element.getBoundingClientRect()
+    tooltip.style.top = `${rect.top + window.scrollY - tooltip.offsetHeight - 5}px`
+    tooltip.style.left = `${rect.left + window.scrollX}px`
+
+    document.body.appendChild(tooltip)
+  }
+
+  function debounce(func, delay) {
+    let timeout
+    return function (...args) {
+      clearTimeout(timeout)
+      timeout = setTimeout(() => func.apply(this, args), delay)
+    }
+  }
+
+  const debouncedShowElementStyles = debounce(showElementStyles, 100)
+
+  document.addEventListener('mouseover', (event) => {
+    const element = event.target
+    debouncedShowElementStyles(element)
+  })
+
+  document.addEventListener('click', (event) => {
+    event.preventDefault()
+    clearPreviousHighlight()
+    console.log('Element inspection mode deactivated!')
+  })
+}
+
+function stopInspecting() {
+  document.removeEventListener('mouseover', handleMouseOver)
+  document.removeEventListener('click', handleMouseClick)
+
+  document.querySelectorAll('.highlight').forEach((element) => {
+    element.classList.remove('highlight')
+  })
+
+  if (tooltip) {
+    tooltip.remove()
+    tooltip = null
+  }
+
+  const injectedStyle = document.querySelector('style')
+  if (injectedStyle) {
+    injectedStyle.remove()
+  }
+}
 
 function collectWebArtifacts() {
   const fontFamilies = Array.from(new Set([...document.querySelectorAll('*')].map((el) => getComputedStyle(el).fontFamily)))
