@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function: collectWebArtifacts,
       },
       async (results) => {
-        const {fonts, colors, images, externalCSSLinks} = results[0].result
+        const {fonts, colors, images, externalCSSLinks, inlineSVGs, svgImages} = results[0].result
 
         const fontList = parseFonts(fonts)
         document.getElementById('fonts').querySelector('div').innerHTML = fontList.join(', ')
@@ -17,10 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const imageElements = parseImages(images)
         document.getElementById('images').querySelector('div').innerHTML = imageElements.join('')
 
-        // Fetch and parse the CSS files
         const parsedCSS = await fetchAndParseCSSFiles(externalCSSLinks)
         const animationsAndTransitions = extractAnimationsAndTransitions(parsedCSS)
         document.getElementById('animations').querySelector('div').innerHTML = animationsAndTransitions.join('')
+
+        const svgIcons = parseSVGs(inlineSVGs, svgImages)
+        document.getElementById('icons').querySelector('div').innerHTML = svgIcons.join('')
       },
     )
   })
@@ -33,13 +35,43 @@ function collectWebArtifacts() {
   const backgroundColors = Array.from(new Set([...document.querySelectorAll('*')].map((el) => getComputedStyle(el).backgroundColor)))
   const combinedColors = [...textColors, ...backgroundColors]
 
-  // Collecting all image src attributes
   const imageSources = Array.from(document.querySelectorAll('img')).map((img) => img.src)
 
-  // Collecting external CSS files (link elements with rel="stylesheet")
   const externalCSSLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((link) => link.href)
 
-  return {fonts: fontFamilies, colors: combinedColors, images: imageSources, externalCSSLinks}
+  const inlineSVGs = Array.from(document.querySelectorAll('svg')).map((svg) => svg.outerHTML)
+
+  const svgImages = Array.from(document.querySelectorAll('img[src$=".svg"]')).map((img) => img.src)
+
+  return {
+    fonts: fontFamilies,
+    colors: combinedColors,
+    images: imageSources,
+    externalCSSLinks,
+    inlineSVGs,
+    svgImages,
+  }
+}
+
+function parseSVGs(inlineSVGs, svgImages) {
+  const inlineSVGElements = inlineSVGs.map((svg, index) => {
+    const blob = new Blob([svg], {type: 'image/svg+xml'})
+    const url = URL.createObjectURL(blob)
+
+    return `
+      <a href="${url}" target="_blank" rel="noopener noreferrer">
+        <div class="svg-icon">${svg}</div>
+      </a>`
+  })
+
+  const svgImageElements = svgImages.map((src) => {
+    return `
+      <a href="${src}" target="_blank" rel="noopener noreferrer">
+        <img src="${src}" style="max-width: 100%; margin-bottom: 10px;" />
+      </a>`
+  })
+
+  return [...inlineSVGElements, ...svgImageElements]
 }
 
 async function fetchAndParseCSSFiles(cssLinks) {
@@ -47,17 +79,14 @@ async function fetchAndParseCSSFiles(cssLinks) {
 
   for (const link of cssLinks) {
     try {
-      // Fetch the CSS file
       const response = await fetch(link)
       if (!response.ok) {
         console.error(`Failed to fetch ${link}:`, response.status)
         continue
       }
 
-      // Get the CSS text
       const cssText = await response.text()
 
-      // Store the CSS text
       parsedCSS[link] = cssText
     } catch (error) {
       console.error(`Error fetching ${link}:`, error)
@@ -78,12 +107,11 @@ function extractAnimationsAndTransitions(parsedCSS) {
 
     for (const rule of rules) {
       const parts = rule.split('{')
-      if (parts.length < 2) continue // Skip if there is no styles
+      if (parts.length < 2) continue
 
       const selector = parts[0].trim()
       const styles = parts[1].trim()
 
-      // Check for animations and transitions
       const animationMatch = styles.match(/animation:[^;]*;/)
       const transitionMatch = styles.match(/transition:[^;]*;/)
 

@@ -67,3 +67,15 @@ div.images-block img {
 .animation-item p {
   margin: 2px 0;
 }
+
+.svg-icon {
+  display: inline-block;
+  margin: 10px;
+  max-width: 100px;
+  max-height: 100px;
+}
+
+.svg-icon svg {
+  width: 100%;
+  height: auto;
+}
